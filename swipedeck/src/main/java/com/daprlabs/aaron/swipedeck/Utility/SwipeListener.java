@@ -3,6 +3,7 @@ package com.daprlabs.aaron.swipedeck.Utility;
 import com.daprlabs.aaron.swipedeck.SwipeDeck;
 
 import android.animation.Animator;
+import android.os.Handler;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -43,6 +44,17 @@ public class SwipeListener implements View.OnTouchListener {
     }
 
     private boolean click = true;
+    private View tmpView = null;
+
+    final Handler handler = new Handler();
+    Runnable mLongPressed = new Runnable() {
+        public void run() {
+            if (tmpView == null) {
+                return;
+            }
+            tmpView.performLongClick();
+        }
+    };
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
@@ -70,6 +82,8 @@ public class SwipeListener implements View.OnTouchListener {
 
                 initialXPress = x;
                 initialYPress = y;
+                tmpView = v;
+                handler.postDelayed(mLongPressed, 1000);
                 break;
 
             case MotionEvent.ACTION_MOVE:
@@ -91,6 +105,9 @@ public class SwipeListener implements View.OnTouchListener {
                 //in this circumstance consider the motion a click
                 if (Math.abs(dx + dy) > 5) {
                     click = false;
+                } else {
+                    handler.removeCallbacks(mLongPressed);
+                    tmpView = null;
                 }
 
                 // Check whether we are allowed to drag this card
@@ -133,6 +150,9 @@ public class SwipeListener implements View.OnTouchListener {
                 break;
 
             case MotionEvent.ACTION_UP:
+                //remove long click
+                handler.removeCallbacks(mLongPressed);
+                tmpView = null;
                 //gesture has finished
                 //check to see if card has moved beyond the left or right bounds or reset
                 //card position
